@@ -1,1 +1,1 @@
-Something...aint right again
+![workflow](https://github.com/YoonPPAung/sem/actions/workflows/main.yml/badge.svg)
