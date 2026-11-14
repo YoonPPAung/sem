@@ -72,39 +72,72 @@ public class App {
     /**
      * Connect to the MySQL database.
      */
-    public void connect() {
-        try {
-            // Load Database driver
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            System.out.println("Could not load SQL driver");
-            System.exit(-1);
-        }
+//    public void connect() {
+//        try {
+//            // Load Database driver
+//            Class.forName("com.mysql.cj.jdbc.Driver");
+//        } catch (ClassNotFoundException e) {
+//            System.out.println("Could not load SQL driver");
+//            System.exit(-1);
+//        }
+//
+//        int retries = 10;
+//        for (int i = 0; i < retries; ++i) {
+//            System.out.println("Connecting to database...");
+//            try {
+//                // Wait a bit for db to start
+//                Thread.sleep(30000);
+//                // Connect to database
+////                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?allowPublicKeyRetrieval=true&useSSL=false", "root", "example");
+//                con = DriverManager.getConnection(
+//                        "jdbc:mysql://localhost:33060/employees?allowPublicKeyRetrieval=true&useSSL=false",
+//                        "root",
+//                        "example"
+//                );
+//                System.out.println("Successfully connected");
+//                break;
+//            } catch (SQLException sqle) {
+//                System.out.println("Failed to connect to database attempt " + Integer.toString(i));
+//                System.out.println(sqle.getMessage());
+//            } catch (InterruptedException ie) {
+//                System.out.println("Thread interrupted? Should not happen.");
+//            }
+//        }
+//    }
 
-        int retries = 10;
-        for (int i = 0; i < retries; ++i) {
-            System.out.println("Connecting to database...");
-            try {
-                // Wait a bit for db to start
-                Thread.sleep(30000);
-                // Connect to database
-//                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?allowPublicKeyRetrieval=true&useSSL=false", "root", "example");
-                con = DriverManager.getConnection(
-                        "jdbc:mysql://localhost:33060/employees?allowPublicKeyRetrieval=true&useSSL=false",
-                        "root",
-                        "example"
-                );
-                System.out.println("Successfully connected");
-                break;
-            } catch (SQLException sqle) {
-                System.out.println("Failed to connect to database attempt " + Integer.toString(i));
-                System.out.println(sqle.getMessage());
-            } catch (InterruptedException ie) {
-                System.out.println("Thread interrupted? Should not happen.");
-            }
-        }
+// so delay should be included as when testing the connection,
+// if it js test immediately, if the connection in between is still in progress
+// it would show no connection, so setting delay is needed,
+// but delay time should be decided properly not to slow down the system
+public void connect(String location, int delay) {
+    try {
+        // Load Database driver
+        Class.forName("com.mysql.cj.jdbc.Driver");
+    } catch (ClassNotFoundException e) {
+        System.out.println("Could not load SQL driver");
+        System.exit(-1);
     }
 
+    int retries = 10;
+    for (int i = 0; i < retries; ++i) {
+        System.out.println("Connecting to database...");
+        try {
+            // Wait a bit for db to start
+            Thread.sleep(delay);
+            // Connect to database
+            con = DriverManager.getConnection("jdbc:mysql://" + location
+                            + "/employees?allowPublicKeyRetrieval=true&useSSL=false",
+                    "root", "example");
+            System.out.println("Successfully connected");
+            break;
+        } catch (SQLException sqle) {
+            System.out.println("Failed to connect to database attempt " +                                  Integer.toString(i));
+            System.out.println(sqle.getMessage());
+        } catch (InterruptedException ie) {
+            System.out.println("Thread interrupted? Should not happen.");
+        }
+    }
+}
     /**
      * Disconnect from the MySQL database.
      */
@@ -120,17 +153,22 @@ public class App {
     }
 
 
-    public static void main(String[] args)
-    {
-        // Create new Application
+    public static void main(String[] args) {
+        // Create new Application and connect to database
         App a = new App();
 
-        // Connect to database
-        a.connect();
-        // Get Employee
-        Employee emp = a.getEmployee(255530);
-        // Display results
-        a.displayEmployee(emp);
+        if(args.length < 1){
+            a.connect("localhost:33060", 30000);
+        }else{
+            a.connect(args[0], Integer.parseInt(args[1]));
+        }
+
+        Department dept = a.getDepartment("Development");
+        ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
+
+
+        // Print salary report
+        a.printSalaries(employees);
 
         // Disconnect from database
         a.disconnect();
@@ -154,5 +192,84 @@ public class App {
                             emp.emp_no, emp.first_name, emp.last_name, emp.salary);
             System.out.println(emp_string);
         }
+    }
+
+//    public Department getDepartment(String name) {
+//        // Find department by name
+//        return null;
+//    }
+    // it return null ofc it would show nothing, tho the connection and input are all ready !!!
+
+    public Department getDepartment(String name) {
+        try {
+            Statement stmt = con.createStatement();
+
+            String strSelect =
+                    "SELECT dept_no, dept_name " +
+                            "FROM departments " +
+                            "WHERE dept_name = '" + name + "'";
+
+            ResultSet rset = stmt.executeQuery(strSelect);
+
+            if (rset.next()) {
+                Department dept = new Department();
+
+                dept.dept_no = rset.getString("dept_no");
+                dept.dept_name = rset.getString("dept_name");
+
+                return dept;
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
+
+//    public ArrayList<Employee> getSalariesByDepartment(Department dept) {
+//        ArrayList<Employee> employees = new ArrayList<>();
+//
+//        // Retrieve employees belonging to this department
+//
+//        return employees;
+//    }
+    // this only return null ofc it would show nothing
+
+    public ArrayList<Employee> getSalariesByDepartment(Department dept) {
+
+        ArrayList<Employee> employees = new ArrayList<>();
+
+        try {
+            Statement stmt = con.createStatement();
+
+            String strSelect =
+                    "SELECT e.emp_no, e.first_name, e.last_name, s.salary " +
+                            "FROM employees e " +
+                            "JOIN dept_emp de ON e.emp_no = de.emp_no " +
+                            "JOIN salaries s ON e.emp_no = s.emp_no " +
+                            "WHERE de.dept_no = '" + dept.dept_no + "' " +
+                            "AND de.to_date = '9999-01-01' " +
+                            "AND s.to_date = '9999-01-01'" +
+                            "LIMIT 5";;
+
+            ResultSet rset = stmt.executeQuery(strSelect);
+
+            while (rset.next()) {
+                Employee emp = new Employee();
+
+                emp.emp_no = rset.getInt("emp_no");
+                emp.first_name = rset.getString("first_name");
+                emp.last_name = rset.getString("last_name");
+                emp.salary = rset.getInt("salary");
+
+                employees.add(emp);
+            }
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return employees;
     }
 }

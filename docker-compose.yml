@@ -10,3 +10,5 @@ services:
     restart: always
     ports:
       - "33060:3306"
+#      The last line tells docker to make port 3306 available on our local machine on port 33060
+# as docker is changed to have JAR file as devops, so image has to changed too
