@@ -26,8 +26,10 @@
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.12.2</version>
+<!--            <artifactId>junit-jupiter</artifactId>-->
+<!--            <version>5.12.2</version>-->
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -55,10 +57,13 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
-                    <finalName>semApp</finalName>
+<!--                    <finalName>semApp</finalName>-->
+                    <finalName>devops</finalName>
+<!--                    Name change to devops to produce JAR file named devops-->
                     <archive>
                         <manifest>
-                            <mainClass>com.napier.sem.App</mainClass>
+<!--                            <mainClass>com.napier.sem.App</mainClass>-->
+                            <mainClass>com.napier.devops.App</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

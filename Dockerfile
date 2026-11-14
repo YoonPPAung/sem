@@ -3,5 +3,6 @@ LABEL authors="ASUS"
 #COPY ./target/classes/com /tmp/com
 COPY ./target/semApp.jar /tmp
 WORKDIR /tmp
-ENTRYPOINT ["java", "-jar", "semApp.jar"]
+ENTRYPOINT ["java", "-jar", "devops.jar", "db:3306", "30000"]
+#ENTRYPOINT ["java", "-jar", "semApp.jar"]
 #ENTRYPOINT ["java", "com.napier.sem.App"]
